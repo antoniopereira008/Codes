@@ -1,20 +1,34 @@
 const http = require('http');
-const { type } = require('os');
+const {URL} = require('url');
+
 const routes = require('./routes');
 
 const server = http.createServer((request, response)=>{
+  const parsedUrl = new URL(`http://localhost:3000${request.url}`);
 
-  console.log(`Request Method: ${request.method} | Endpoint: ${request.url}`);
+  let { pathname } = parsedUrl;
+  let id = null;
+
+  const splitEndPoint = pathname.split('/').filter(Boolean);
+  
+  if (splitEndPoint.length > 1) {
+    pathname = `/${splitEndPoint[0]}/:id`;
+    id = splitEndPoint[1];
+  }
+
+  console.log(`Request Method: ${request.method} | Endpoint: ${parsedUrl.pathname}`);
 
   const route = routes.find((routObj) => (
-    routObj.endpoint === request.url && routObj.method === request.method
+    routObj.endpoint === pathname && routObj.method === request.method
   ));
 
   if(route){
+    request.query = Object.fromEntries(parsedUrl.searchParams);
+    request.params = { id };
     route.handler(request,response);
   } else {
     response.writeHead(404,{'Content-type': 'text/html' });
-    response.end(`Cannot ${request.method} ${request.url}`);
+    response.end(`Cannot ${request.method} ${parsedUrl.pathname}`);
   }
  
 });
