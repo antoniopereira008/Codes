@@ -23,12 +23,13 @@ const server = http.createServer((request, response)=>{
   ));
 
   if(route){
-    request.query = Object.fromEntries(parsedUrl.searchParams);
+    request.query = parsedUrl.query;
     request.params = { id };
+
     route.handler(request,response);
   } else {
     response.writeHead(404,{'Content-type': 'text/html' });
-    response.end(`Cannot ${request.method} ${parsedUrl.pathname}`);
+    response.end(`Cannot ${request.method} ${pathname}`);
   }
  
 });
