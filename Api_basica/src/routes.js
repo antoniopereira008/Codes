@@ -11,4 +11,14 @@ module.exports = [
     method: 'GET',
     handler: UserController.getUserById,
   },
+  {
+    endpoint:  '/users/:id',
+    method: 'POST',
+    handler: UserController.createUser,
+  },
+  {
+    endpoint:  '/users/:id',
+    method: 'DELETE',
+    handler: UserController.deleteUser,
+  },
 ];

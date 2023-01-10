@@ -1,10 +1,12 @@
 const http = require('http');
-const {URL} = require('url');
+const url = require('url');
 
+const bodyParser = require('./helpers/bodyParse');
 const routes = require('./routes');
 
 const server = http.createServer((request, response)=>{
-  const parsedUrl = new URL(`http://localhost:3000${request.url}`);
+  const parsedUrl = url.parse(request.url, true);
+  console.log(`Request mothod: ${request.method} | EndPont: ${parsedUrl.pathname}`);
 
   let { pathname } = parsedUrl;
   let id = null;
@@ -16,8 +18,6 @@ const server = http.createServer((request, response)=>{
     id = splitEndPoint[1];
   }
 
-  console.log(`Request Method: ${request.method} | Endpoint: ${parsedUrl.pathname}`);
-
   const route = routes.find((routObj) => (
     routObj.endpoint === pathname && routObj.method === request.method
   ));
@@ -26,7 +26,17 @@ const server = http.createServer((request, response)=>{
     request.query = parsedUrl.query;
     request.params = { id };
 
-    route.handler(request,response);
+    response.send = (statuscode, body) => {
+      response.writeHead(statuscode, { 'Content-Type' : 'application/json' });
+      response.end(JSON.stringify(body));
+    }
+    
+    if (['PUT','POST','PATCH'].includes(request.method)) {
+      bodyParser(request, () => route.handler(request, response));
+    } else {
+      route.handler(request, response);
+    }
+
   } else {
     response.writeHead(404,{'Content-type': 'text/html' });
     response.end(`Cannot ${request.method} ${pathname}`);
